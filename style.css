@@ -1,7 +1,7 @@
-*{
+* {
     user-select: none;
-}
-body {
+  }
+  body {
     font-family: Arial, sans-serif;
     display: flex;
     justify-content: center;
@@ -9,21 +9,21 @@ body {
     min-height: 100vh;
     background-color: #f0f0f0;
     margin: 0;
-}
-
-.container {
+  }
+  
+  .container {
     text-align: center;
     background-color: #fff;
     padding: 2rem;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
+  }
+  
+  h1 {
     color: #333;
-}
-
-#graph-container {
+  }
+  
+  #graph-container {
     position: relative;
     width: 600px;
     height: 400px;
@@ -31,9 +31,10 @@ h1 {
     border: 2px solid #ccc;
     border-radius: 5px;
     background-color: #f9f9f9;
-}
-
-.node {
+    touch-action: none; /* important fix */
+  }
+  
+  .node {
     width: 50px;
     height: 50px;
     background-color: #3498db;
@@ -47,53 +48,54 @@ h1 {
     font-size: 1.2rem;
     cursor: pointer;
     transition: background-color 0.5s ease;
-}
-
-.node.start {
+  }
+  
+  .node.start {
     background-color: #2ecc71;
-}
-
-.node.current {
+  }
+  
+  .node.current {
     background-color: #e74c3c;
     animation: pulse 1s infinite;
-}
-
-.node.queued {
+  }
+  
+  .node.queued {
     background-color: #f1c40f;
-}
-
-.node.visited {
+  }
+  
+  .node.visited {
     background-color: #9b59b6;
-}
-
-@keyframes pulse {
+  }
+  
+  @keyframes pulse {
     0% { transform: scale(1); }
     50% { transform: scale(1.1); }
     100% { transform: scale(1); }
-}
-
-.edge {
+  }
+  
+  .edge {
     stroke: #aaa;
     stroke-width: 2;
     transition: stroke 0.5s ease;
-}
-
-.edge.active {
+  }
+  
+  .edge.active {
     stroke: #e74c3c;
     stroke-width: 4;
-}
-
-.temp-edge {
+  }
+  
+  .temp-edge {
     stroke: #555;
     stroke-dasharray: 5, 5;
     stroke-width: 2;
-}
-
-.controls, .graph-creator-controls {
+  }
+  
+  .controls,
+  .graph-creator-controls {
     margin-top: 1rem;
-}
-
-button {
+  }
+  
+  button {
     padding: 0.5rem 1rem;
     margin: 0 0.5rem;
     font-size: 1rem;
@@ -103,27 +105,28 @@ button {
     background-color: #3498db;
     color: white;
     transition: background-color 0.3s ease;
-}
-
-button:hover {
+  }
+  
+  button:hover {
     background-color: #2980b9;
-}
-
-button.active {
+  }
+  
+  button.active {
     background-color: #2ecc71;
-}
-
-button:disabled {
+  }
+  
+  button:disabled {
     background-color: #ccc;
     cursor: not-allowed;
-}
-
-.info {
+  }
+  
+  .info {
     margin-top: 1.5rem;
     text-align: left;
-}
-
-.queue, .visited {
+  }
+  
+  .queue,
+  .visited {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
@@ -131,10 +134,12 @@ button:disabled {
     padding: 0.5rem;
     border: 1px solid #ddd;
     border-radius: 5px;
-}
-
-.queue-item, .visited-item {
+  }
+  
+  .queue-item,
+  .visited-item {
     background-color: #ecf0f1;
     padding: 0.25rem 0.75rem;
     border-radius: 15px;
-}
+  }
+  

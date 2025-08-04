@@ -60,8 +60,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mode === 'add-node') {
             e.preventDefault(); // Prevent default touch behavior
             const rect = graphContainer.getBoundingClientRect();
-            const clientX = e.clientX || e.touches[0].clientX;
-            const clientY = e.clientY || e.touches[0].clientY;
+            const clientX = e.clientX || (e.touches ? e.touches[0].clientX : null);
+            const clientY = e.clientY || (e.touches ? e.touches[0].clientY : null);
+
+            if (clientX === null || clientY === null) return;
+
             const offsetX = clientX - rect.left;
             const offsetY = clientY - rect.top;
 
@@ -129,8 +132,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isDrawing && tempEdge) {
             e.preventDefault();
             const containerRect = graphContainer.getBoundingClientRect();
-            const clientX = e.clientX || e.touches[0].clientX;
-            const clientY = e.clientY || e.touches[0].clientY;
+            const clientX = e.clientX || (e.touches ? e.touches[0].clientX : null);
+            const clientY = e.clientY || (e.touches ? e.touches[0].clientY : null);
+
+            if (clientX === null || clientY === null) return;
+
             const mouseX = clientX - containerRect.left;
             const mouseY = clientY - containerRect.top;
             tempEdge.setAttribute('x2', mouseX);
@@ -152,12 +158,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 tempEdge = null;
             }
 
-            // Find the node element at the end of the interaction
-            const endNodeElement = document.elementFromPoint(e.clientX || e.changedTouches[0].clientX, e.clientY || e.changedTouches[0].clientY);
-            
-            if (endNodeElement && endNodeElement.closest('.node') && endNodeElement.closest('.node').id !== startNodeForEdge) {
-                const finalEndNodeElement = endNodeElement.closest('.node');
-                const endNodeId = finalEndNodeElement.id;
+            // Get the final coordinates from the event
+            const clientX = e.clientX || (e.changedTouches ? e.changedTouches[0].clientX : null);
+            const clientY = e.clientY || (e.changedTouches ? e.changedTouches[0].clientY : null);
+
+            if (clientX === null || clientY === null) return;
+
+            // Find the node element at the final coordinates using a more reliable method
+            let endNodeElement = null;
+            for (const nodeId in nodeElements) {
+                const nodeEl = nodeElements[nodeId];
+                const rect = nodeEl.getBoundingClientRect();
+                if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
+                    endNodeElement = nodeEl;
+                    break;
+                }
+            }
+
+            if (endNodeElement && endNodeElement.id !== startNodeForEdge) {
+                const endNodeId = endNodeElement.id;
                 
                 // Check if edge already exists
                 if (!graph[startNodeForEdge].includes(endNodeId)) {
@@ -169,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     let svg = graphContainer.querySelector('svg');
                     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                     const startNodePos = { x: nodeElements[startNodeForEdge].offsetLeft + 25, y: nodeElements[startNodeForEdge].offsetTop + 25 };
-                    const endNodePos = { x: finalEndNodeElement.offsetLeft + 25, y: finalEndNodeElement.offsetTop + 25 };
+                    const endNodePos = { x: endNodeElement.offsetLeft + 25, y: endNodeElement.offsetTop + 25 };
 
                     line.setAttribute('x1', startNodePos.x);
                     line.setAttribute('y1', startNodePos.y);

@@ -1,37 +1,43 @@
 * {
     user-select: none;
+    box-sizing: border-box;
   }
+  
   body {
     font-family: Arial, sans-serif;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     min-height: 100vh;
     background-color: #f0f0f0;
     margin: 0;
+    padding: 1rem;
   }
   
   .container {
-    text-align: center;
+    width: 100%;
+    max-width: 960px;
     background-color: #fff;
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
   
   h1 {
     color: #333;
+    margin-top: 0;
   }
   
   #graph-container {
     position: relative;
-    width: 600px;
-    height: 400px;
-    margin: 2rem auto;
+    width: 100%;
+    aspect-ratio: 3 / 2; /* Responsive height */
+    margin: 1.5rem 0;
     border: 2px solid #ccc;
     border-radius: 5px;
     background-color: #f9f9f9;
-    touch-action: none; /* important fix */
+    touch-action: none; /* Prevent scrolling when drawing */
+    overflow: hidden;
   }
   
   .node {
@@ -45,27 +51,16 @@
     align-items: center;
     color: white;
     font-weight: bold;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     cursor: pointer;
     transition: background-color 0.5s ease;
+    z-index: 1;
   }
   
-  .node.start {
-    background-color: #2ecc71;
-  }
-  
-  .node.current {
-    background-color: #e74c3c;
-    animation: pulse 1s infinite;
-  }
-  
-  .node.queued {
-    background-color: #f1c40f;
-  }
-  
-  .node.visited {
-    background-color: #9b59b6;
-  }
+  .node.start { background-color: #2ecc71; }
+  .node.current { background-color: #e74c3c; animation: pulse 1s infinite; }
+  .node.queued { background-color: #f1c40f; }
+  .node.visited { background-color: #9b59b6; }
   
   @keyframes pulse {
     0% { transform: scale(1); }
@@ -92,12 +87,21 @@
   
   .controls,
   .graph-creator-controls {
-    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  button,
+  select,
+  label {
+    font-size: 1rem;
   }
   
   button {
     padding: 0.5rem 1rem;
-    margin: 0 0.5rem;
     font-size: 1rem;
     cursor: pointer;
     border: none;
@@ -107,17 +111,14 @@
     transition: background-color 0.3s ease;
   }
   
-  button:hover {
-    background-color: #2980b9;
-  }
+  button:hover { background-color: #2980b9; }
+  button.active { background-color: #2ecc71; }
+  button:disabled { background-color: #ccc; cursor: not-allowed; }
   
-  button.active {
-    background-color: #2ecc71;
-  }
-  
-  button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
+  select {
+    padding: 0.5rem;
+    border-radius: 5px;
+    border: 1px solid #ccc;
   }
   
   .info {
@@ -134,6 +135,7 @@
     padding: 0.5rem;
     border: 1px solid #ddd;
     border-radius: 5px;
+    background-color: #fefefe;
   }
   
   .queue-item,
@@ -141,5 +143,32 @@
     background-color: #ecf0f1;
     padding: 0.25rem 0.75rem;
     border-radius: 15px;
+  }
+  
+  /* Small Screen Handling */
+  @media (max-width: 600px) {
+    .container {
+      padding: 1rem;
+    }
+  
+    .node {
+      width: 40px;
+      height: 40px;
+      font-size: 0.9rem;
+    }
+  
+    #graph-container {
+      aspect-ratio: 4 / 3;
+    }
+  
+    button, select {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+  
+    .controls, .graph-creator-controls {
+      flex-direction: column;
+      align-items: stretch;
+    }
   }
   

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive BFS Visualization</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Interactive BFS Visualization</h1>
+
+        <div class="graph-creator-controls">
+            <h3>Graph Creator</h3>
+            <button id="add-node-btn" class="active">Add Nodes</button>
+            <button id="add-edge-btn">Add Edges</button>
+            <button id="clear-graph-btn">Clear Graph</button>
+        </div>
+
+        <div id="graph-container">
+            </div>
+
+        <div class="controls">
+            <label for="startNode">Select starting node:</label>
+            <select id="startNode"></select>
+            <button id="start-btn" disabled>Start BFS</button>
+            <button id="reset-btn" disabled>Reset</button>
+        </div>
+
+        <div class="info">
+            <h3 style="display: none;">Traversal Queue:</h3>
+            <div id="queue-display" class="queue" style="display: none;"></div>
+            <h3>Traversal Nodes:</h3>
+            <div id="visited-display" class="visited"></div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

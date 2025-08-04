@@ -1,0 +1,140 @@
+*{
+    user-select: none;
+}
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f0f0;
+    margin: 0;
+}
+
+.container {
+    text-align: center;
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #333;
+}
+
+#graph-container {
+    position: relative;
+    width: 600px;
+    height: 400px;
+    margin: 2rem auto;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.node {
+    width: 50px;
+    height: 50px;
+    background-color: #3498db;
+    border-radius: 50%;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.5s ease;
+}
+
+.node.start {
+    background-color: #2ecc71;
+}
+
+.node.current {
+    background-color: #e74c3c;
+    animation: pulse 1s infinite;
+}
+
+.node.queued {
+    background-color: #f1c40f;
+}
+
+.node.visited {
+    background-color: #9b59b6;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.edge {
+    stroke: #aaa;
+    stroke-width: 2;
+    transition: stroke 0.5s ease;
+}
+
+.edge.active {
+    stroke: #e74c3c;
+    stroke-width: 4;
+}
+
+.temp-edge {
+    stroke: #555;
+    stroke-dasharray: 5, 5;
+    stroke-width: 2;
+}
+
+.controls, .graph-creator-controls {
+    margin-top: 1rem;
+}
+
+button {
+    padding: 0.5rem 1rem;
+    margin: 0 0.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    background-color: #3498db;
+    color: white;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+button.active {
+    background-color: #2ecc71;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.info {
+    margin-top: 1.5rem;
+    text-align: left;
+}
+
+.queue, .visited {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.queue-item, .visited-item {
+    background-color: #ecf0f1;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+}

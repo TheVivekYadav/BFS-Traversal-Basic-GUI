@@ -9,9 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const addEdgeBtn = document.getElementById('add-edge-btn');
     const clearGraphBtn = document.getElementById('clear-graph-btn');
 
-    let graph = {}; // Adjacency list
+    let graph = {};
     let nodeCount = 0;
-    let mode = 'add-node'; // 'add-node' or 'add-edge'
+    let mode = 'add-node';
 
     let queue = [];
     let visited = new Set();
@@ -19,12 +19,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let nodeElements = {};
     let edgeElements = {};
 
-    // For adding edges (mouse and touch)
     let isDrawing = false;
     let startNodeForEdge = null;
     let tempEdge = null;
-    
-    // --- Graph Creation Logic ---
+
     addNodeBtn.addEventListener('click', () => {
         mode = 'add-node';
         addNodeBtn.classList.add('active');
@@ -49,208 +47,179 @@ document.addEventListener('DOMContentLoaded', () => {
         resetBtn.disabled = true;
     });
 
-    // Unified event handler for mouse and touch to add nodes
     graphContainer.addEventListener('mousedown', handleContainerInteraction);
-    graphContainer.addEventListener('touchstart', handleContainerInteraction);
+    graphContainer.addEventListener('touchstart', handleContainerInteraction, { passive: false });
 
     function handleContainerInteraction(e) {
-        // Only trigger on the container itself, not on a child node
         if (e.target.id !== 'graph-container') return;
+        if (mode !== 'add-node') return;
 
-        if (mode === 'add-node') {
-            e.preventDefault(); // Prevent default touch behavior
-            const rect = graphContainer.getBoundingClientRect();
-            const clientX = e.clientX || (e.touches ? e.touches[0].clientX : null);
-            const clientY = e.clientY || (e.touches ? e.touches[0].clientY : null);
+        e.preventDefault();
 
-            if (clientX === null || clientY === null) return;
+        const rect = graphContainer.getBoundingClientRect();
+        const clientX = e.clientX ?? (e.touches?.[0]?.clientX ?? null);
+        const clientY = e.clientY ?? (e.touches?.[0]?.clientY ?? null);
+        if (clientX === null || clientY === null) return;
 
-            const offsetX = clientX - rect.left;
-            const offsetY = clientY - rect.top;
+        const offsetX = clientX - rect.left;
+        const offsetY = clientY - rect.top;
 
-            nodeCount++;
-            const nodeId = `Node ${nodeCount}`;
-            const nodeElement = createNodeElement(nodeId, offsetX, offsetY);
-            graphContainer.appendChild(nodeElement);
-            
-            graph[nodeId] = []; // Add the new node to the graph
-            nodeElements[nodeId] = nodeElement;
+        nodeCount++;
+        const nodeId = `Node ${nodeCount}`;
+        const nodeElement = createNodeElement(nodeId, offsetX, offsetY);
+        graphContainer.appendChild(nodeElement);
 
-            // Update the dropdown and buttons
-            updateNodeSelection();
-            
-            // Add event listeners for the new node
-            nodeElement.addEventListener('mousedown', handleNodeInteraction);
-            nodeElement.addEventListener('touchstart', handleNodeInteraction);
-        }
+        graph[nodeId] = [];
+        nodeElements[nodeId] = nodeElement;
+
+        updateNodeSelection();
+
+        nodeElement.addEventListener('mousedown', handleNodeInteraction);
+        nodeElement.addEventListener('touchstart', handleNodeInteraction, { passive: false });
     }
 
     function createNodeElement(id, x, y) {
-        const nodeElement = document.createElement('div');
-        nodeElement.className = 'node';
-        nodeElement.id = id;
-        nodeElement.innerText = id;
-        nodeElement.style.left = `${x - 25}px`;
-        nodeElement.style.top = `${y - 25}px`;
-        return nodeElement;
+        const el = document.createElement('div');
+        el.className = 'node';
+        el.id = id;
+        el.innerText = id;
+        el.style.left = `${x - 25}px`;
+        el.style.top = `${y - 25}px`;
+        return el;
     }
 
-    // Unified event handler for mousedown and touchstart on a node
     function handleNodeInteraction(e) {
-        if (mode === 'add-edge') {
-            e.stopPropagation(); // Prevent the container click/touch event from firing
-            e.preventDefault(); // Prevent default touch behavior (text selection, etc.)
-            isDrawing = true;
-            startNodeForEdge = e.target.id;
+        if (mode !== 'add-edge') return;
+        e.preventDefault();
+        e.stopPropagation();
 
-            // Get SVG for drawing
-            let svg = graphContainer.querySelector('svg');
-            if (!svg) {
-                svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                svg.setAttribute("width", "100%");
-                svg.setAttribute("height", "100%");
-                graphContainer.appendChild(svg);
-            }
+        isDrawing = true;
+        startNodeForEdge = e.target.id;
 
-            tempEdge = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            tempEdge.setAttribute('class', 'temp-edge');
-            const startX = e.target.offsetLeft + 25;
-            const startY = e.target.offsetTop + 25;
-            tempEdge.setAttribute('x1', startX);
-            tempEdge.setAttribute('y1', startY);
-            tempEdge.setAttribute('x2', startX);
-            tempEdge.setAttribute('y2', startY);
-            svg.appendChild(tempEdge);
+        let svg = graphContainer.querySelector('svg');
+        if (!svg) {
+            svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", "100%");
+            svg.setAttribute("height", "100%");
+            graphContainer.appendChild(svg);
         }
+
+        tempEdge = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        tempEdge.setAttribute('class', 'temp-edge');
+        const startX = e.target.offsetLeft + 25;
+        const startY = e.target.offsetTop + 25;
+        tempEdge.setAttribute('x1', startX);
+        tempEdge.setAttribute('y1', startY);
+        tempEdge.setAttribute('x2', startX);
+        tempEdge.setAttribute('y2', startY);
+        svg.appendChild(tempEdge);
     }
 
-    // Unified event handler for mousemove and touchmove
     graphContainer.addEventListener('mousemove', handleDrawing);
-    graphContainer.addEventListener('touchmove', handleDrawing);
+    graphContainer.addEventListener('touchmove', handleDrawing, { passive: false });
 
     function handleDrawing(e) {
-        if (isDrawing && tempEdge) {
-            e.preventDefault(); // Prevent scrolling while drawing on touch devices
-            const containerRect = graphContainer.getBoundingClientRect();
-            const clientX = e.clientX || (e.touches ? e.touches[0].clientX : null);
-            const clientY = e.clientY || (e.touches ? e.touches[0].clientY : null);
+        if (!isDrawing || !tempEdge) return;
+        e.preventDefault();
 
-            if (clientX === null || clientY === null) return;
+        const rect = graphContainer.getBoundingClientRect();
+        const clientX = e.clientX ?? (e.touches?.[0]?.clientX ?? null);
+        const clientY = e.clientY ?? (e.touches?.[0]?.clientY ?? null);
+        if (clientX === null || clientY === null) return;
 
-            const mouseX = clientX - containerRect.left;
-            const mouseY = clientY - containerRect.top;
-            tempEdge.setAttribute('x2', mouseX);
-            tempEdge.setAttribute('y2', mouseY);
-        }
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        tempEdge.setAttribute('x2', x);
+        tempEdge.setAttribute('y2', y);
     }
 
-    // Unified event handler for mouseup and touchend
     graphContainer.addEventListener('mouseup', handleDrawingEnd);
-    graphContainer.addEventListener('touchend', handleDrawingEnd);
+    graphContainer.addEventListener('touchend', handleDrawingEnd, { passive: false });
 
     function handleDrawingEnd(e) {
-        if (isDrawing) {
-            e.preventDefault();
-            isDrawing = false;
-            
-            if (tempEdge) {
-                tempEdge.remove();
-                tempEdge = null;
+        if (!isDrawing) return;
+        e.preventDefault();
+        isDrawing = false;
+
+        if (tempEdge) {
+            tempEdge.remove();
+            tempEdge = null;
+        }
+
+        const clientX = e.clientX ?? (e.changedTouches?.[0]?.clientX ?? null);
+        const clientY = e.clientY ?? (e.changedTouches?.[0]?.clientY ?? null);
+        if (clientX === null || clientY === null) return;
+
+        let endNodeElement = null;
+        for (const nodeId in nodeElements) {
+            const rect = nodeElements[nodeId].getBoundingClientRect();
+            if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
+                endNodeElement = nodeElements[nodeId];
+                break;
             }
+        }
 
-            // Get the final coordinates from the event
-            const clientX = e.clientX || (e.changedTouches ? e.changedTouches[0].clientX : null);
-            const clientY = e.clientY || (e.changedTouches ? e.changedTouches[0].clientY : null);
+        if (endNodeElement && endNodeElement.id !== startNodeForEdge) {
+            const endNodeId = endNodeElement.id;
 
-            if (clientX === null || clientY === null) return;
+            if (!graph[startNodeForEdge].includes(endNodeId)) {
+                graph[startNodeForEdge].push(endNodeId);
+                graph[endNodeId].push(startNodeForEdge);
 
-            // Find the node element at the final coordinates using a more reliable method
-            let endNodeElement = null;
-            for (const nodeId in nodeElements) {
-                const nodeEl = nodeElements[nodeId];
-                const rect = nodeEl.getBoundingClientRect();
-                if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
-                    endNodeElement = nodeEl;
-                    break;
-                }
-            }
+                let svg = graphContainer.querySelector('svg');
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                const start = nodeElements[startNodeForEdge];
+                const end = endNodeElement;
 
-            if (endNodeElement && endNodeElement.id !== startNodeForEdge) {
-                const endNodeId = endNodeElement.id;
-                
-                // Check if edge already exists
-                if (!graph[startNodeForEdge].includes(endNodeId)) {
-                    // Add edge to graph data
-                    graph[startNodeForEdge].push(endNodeId);
-                    graph[endNodeId].push(startNodeForEdge); // For an undirected graph
+                line.setAttribute('x1', start.offsetLeft + 25);
+                line.setAttribute('y1', start.offsetTop + 25);
+                line.setAttribute('x2', end.offsetLeft + 25);
+                line.setAttribute('y2', end.offsetTop + 25);
+                line.setAttribute('class', 'edge');
+                svg.appendChild(line);
 
-                    // Draw the permanent edge
-                    let svg = graphContainer.querySelector('svg');
-                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    const startNodePos = { x: nodeElements[startNodeForEdge].offsetLeft + 25, y: nodeElements[startNodeForEdge].offsetTop + 25 };
-                    const endNodePos = { x: endNodeElement.offsetLeft + 25, y: endNodeElement.offsetTop + 25 };
-
-                    line.setAttribute('x1', startNodePos.x);
-                    line.setAttribute('y1', startNodePos.y);
-                    line.setAttribute('x2', endNodePos.x);
-                    line.setAttribute('y2', endNodePos.y);
-                    line.setAttribute('class', 'edge');
-                    svg.appendChild(line);
-
-                    const edgeKey = startNodeForEdge < endNodeId ? `${startNodeForEdge}-${endNodeId}` : `${endNodeId}-${startNodeForEdge}`;
-                    edgeElements[edgeKey] = line;
-                }
+                const key = startNodeForEdge < endNodeId
+                    ? `${startNodeForEdge}-${endNodeId}`
+                    : `${endNodeId}-${startNodeForEdge}`;
+                edgeElements[key] = line;
             }
         }
     }
 
     function updateNodeSelection() {
-        const nodeKeys = Object.keys(graph);
-        startNodeSelect.innerHTML = nodeKeys.map(node => `<option value="${node}">${node}</option>`).join('');
-        startBtn.disabled = nodeKeys.length === 0;
-        resetBtn.disabled = nodeKeys.length === 0;
+        const nodes = Object.keys(graph);
+        startNodeSelect.innerHTML = nodes.map(n => `<option value="${n}">${n}</option>`).join('');
+        startBtn.disabled = nodes.length === 0;
+        resetBtn.disabled = nodes.length === 0;
     }
 
-    // --- BFS Traversal Logic (remains largely the same) ---
     function updateVisuals() {
-        queueDisplay.innerHTML = queue.map(node => `<div class="queue-item">${node}</div>`).join('');
-        visitedDisplay.innerHTML = Array.from(visited).map(node => `<div class="visited-item">${node}</div>`).join('');
+        queueDisplay.innerHTML = queue.map(n => `<div class="queue-item">${n}</div>`).join('');
+        visitedDisplay.innerHTML = [...visited].map(n => `<div class="visited-item">${n}</div>`).join('');
 
         for (const node in nodeElements) {
-            const element = nodeElements[node];
-            element.classList.remove('start', 'current', 'queued', 'visited');
+            const el = nodeElements[node];
+            el.classList.remove('start', 'current', 'queued', 'visited');
 
-            if (node === startNodeSelect.value) {
-                element.classList.add('start');
-            }
-            if (visited.has(node)) {
-                element.classList.add('visited');
-            }
-            if (queue.includes(node)) {
-                element.classList.add('queued');
-            }
-            if (queue[0] === node) {
-                element.classList.add('current');
-            }
+            if (node === startNodeSelect.value) el.classList.add('start');
+            if (visited.has(node)) el.classList.add('visited');
+            if (queue.includes(node)) el.classList.add('queued');
+            if (queue[0] === node) el.classList.add('current');
         }
     }
 
     function animateBFS() {
         if (queue.length === 0) {
             clearInterval(animationInterval);
-            if (nodeElements[startNodeSelect.value]) {
-                nodeElements[startNodeSelect.value].classList.remove('current');
-            }
-            console.log("BFS traversal complete.");
+            const current = nodeElements[startNodeSelect.value];
+            if (current) current.classList.remove('current');
+            console.log("BFS complete.");
             return;
         }
 
         const currentNode = queue.shift();
-        
-        const previousNode = document.querySelector('.node.current');
-        if (previousNode) {
-            previousNode.classList.remove('current');
-        }
+        const prev = document.querySelector('.node.current');
+        if (prev) prev.classList.remove('current');
 
         if (nodeElements[currentNode]) {
             nodeElements[currentNode].classList.add('current');
@@ -258,16 +227,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         visited.add(currentNode);
         updateVisuals();
-        
+
         setTimeout(() => {
-            for (const neighbor of graph[currentNode] || []) {
+            for (const neighbor of graph[currentNode]) {
                 if (!visited.has(neighbor) && !queue.includes(neighbor)) {
                     queue.push(neighbor);
-                    const edgeKey = currentNode < neighbor ? `${currentNode}-${neighbor}` : `${neighbor}-${currentNode}`;
-                    const edge = edgeElements[edgeKey];
-                    if (edge) {
-                        edge.classList.add('active');
-                    }
+                    const key = currentNode < neighbor ? `${currentNode}-${neighbor}` : `${neighbor}-${currentNode}`;
+                    const edge = edgeElements[key];
+                    if (edge) edge.classList.add('active');
                 }
             }
             updateVisuals();
@@ -277,12 +244,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function startTraversal() {
         const startNode = startNodeSelect.value;
         if (!startNode || !graph[startNode]) {
-            alert("Please create a graph and select a starting node.");
+            alert("Please select a valid start node.");
             return;
         }
 
         reset();
-        
         queue.push(startNode);
         visited.add(startNode);
         updateVisuals();
@@ -297,11 +263,11 @@ document.addEventListener('DOMContentLoaded', () => {
         queue = [];
         visited.clear();
         for (const node in nodeElements) {
-            const element = nodeElements[node];
-            element.classList.remove('start', 'current', 'queued', 'visited');
+            const el = nodeElements[node];
+            el.classList.remove('start', 'current', 'queued', 'visited');
         }
-        for (const edgeKey in edgeElements) {
-            edgeElements[edgeKey].classList.remove('active');
+        for (const key in edgeElements) {
+            edgeElements[key].classList.remove('active');
         }
         queueDisplay.innerHTML = '';
         visitedDisplay.innerHTML = '';
@@ -309,11 +275,9 @@ document.addEventListener('DOMContentLoaded', () => {
         resetBtn.disabled = true;
         updateNodeSelection();
     }
-    
-    // Event listeners
+
     startBtn.addEventListener('click', startTraversal);
     resetBtn.addEventListener('click', reset);
 
-    // Initial state
     document.body.style.cursor = 'crosshair';
 });

@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleNodeInteraction(e) {
         if (mode === 'add-edge') {
             e.stopPropagation(); // Prevent the container click/touch event from firing
-            e.preventDefault(); // Prevent default touch behavior
+            e.preventDefault(); // Prevent default touch behavior (text selection, etc.)
             isDrawing = true;
             startNodeForEdge = e.target.id;
 
@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleDrawing(e) {
         if (isDrawing && tempEdge) {
-            e.preventDefault();
+            e.preventDefault(); // Prevent scrolling while drawing on touch devices
             const containerRect = graphContainer.getBoundingClientRect();
             const clientX = e.clientX || (e.touches ? e.touches[0].clientX : null);
             const clientY = e.clientY || (e.touches ? e.touches[0].clientY : null);

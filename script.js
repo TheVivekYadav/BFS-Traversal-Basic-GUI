@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let nodeElements = {};
     let edgeElements = {};
 
-    // For adding edges
+    // For adding edges (mouse and touch)
     let isDrawing = false;
     let startNodeForEdge = null;
     let tempEdge = null;
@@ -49,26 +49,38 @@ document.addEventListener('DOMContentLoaded', () => {
         resetBtn.disabled = true;
     });
 
-    graphContainer.addEventListener('click', (e) => {
-        if (mode === 'add-node') {
-            // Check if the click was on the graph container itself, not a node
-            if (e.target.id === 'graph-container') {
-                nodeCount++;
-                const nodeId = `Node ${nodeCount}`;
-                const nodeElement = createNodeElement(nodeId, e.offsetX, e.offsetY);
-                graphContainer.appendChild(nodeElement);
-                
-                graph[nodeId] = []; // Add the new node to the graph
-                nodeElements[nodeId] = nodeElement;
+    // Unified event handler for mouse and touch to add nodes
+    graphContainer.addEventListener('mousedown', handleContainerInteraction);
+    graphContainer.addEventListener('touchstart', handleContainerInteraction);
 
-                // Update the dropdown and buttons
-                updateNodeSelection();
-                
-                // Add event listeners for new node
-                nodeElement.addEventListener('mousedown', handleNodeMouseDown);
-            }
+    function handleContainerInteraction(e) {
+        // Only trigger on the container itself, not on a child node
+        if (e.target.id !== 'graph-container') return;
+
+        if (mode === 'add-node') {
+            e.preventDefault(); // Prevent default touch behavior
+            const rect = graphContainer.getBoundingClientRect();
+            const clientX = e.clientX || e.touches[0].clientX;
+            const clientY = e.clientY || e.touches[0].clientY;
+            const offsetX = clientX - rect.left;
+            const offsetY = clientY - rect.top;
+
+            nodeCount++;
+            const nodeId = `Node ${nodeCount}`;
+            const nodeElement = createNodeElement(nodeId, offsetX, offsetY);
+            graphContainer.appendChild(nodeElement);
+            
+            graph[nodeId] = []; // Add the new node to the graph
+            nodeElements[nodeId] = nodeElement;
+
+            // Update the dropdown and buttons
+            updateNodeSelection();
+            
+            // Add event listeners for the new node
+            nodeElement.addEventListener('mousedown', handleNodeInteraction);
+            nodeElement.addEventListener('touchstart', handleNodeInteraction);
         }
-    });
+    }
 
     function createNodeElement(id, x, y) {
         const nodeElement = document.createElement('div');
@@ -80,9 +92,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return nodeElement;
     }
 
-    function handleNodeMouseDown(e) {
+    // Unified event handler for mousedown and touchstart on a node
+    function handleNodeInteraction(e) {
         if (mode === 'add-edge') {
-            e.stopPropagation(); // Prevent the container click event from firing
+            e.stopPropagation(); // Prevent the container click/touch event from firing
+            e.preventDefault(); // Prevent default touch behavior
             isDrawing = true;
             startNodeForEdge = e.target.id;
 
@@ -107,18 +121,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    graphContainer.addEventListener('mousemove', (e) => {
+    // Unified event handler for mousemove and touchmove
+    graphContainer.addEventListener('mousemove', handleDrawing);
+    graphContainer.addEventListener('touchmove', handleDrawing);
+
+    function handleDrawing(e) {
         if (isDrawing && tempEdge) {
+            e.preventDefault();
             const containerRect = graphContainer.getBoundingClientRect();
-            const mouseX = e.clientX - containerRect.left;
-            const mouseY = e.clientY - containerRect.top;
+            const clientX = e.clientX || e.touches[0].clientX;
+            const clientY = e.clientY || e.touches[0].clientY;
+            const mouseX = clientX - containerRect.left;
+            const mouseY = clientY - containerRect.top;
             tempEdge.setAttribute('x2', mouseX);
             tempEdge.setAttribute('y2', mouseY);
         }
-    });
+    }
 
-    graphContainer.addEventListener('mouseup', (e) => {
+    // Unified event handler for mouseup and touchend
+    graphContainer.addEventListener('mouseup', handleDrawingEnd);
+    graphContainer.addEventListener('touchend', handleDrawingEnd);
+
+    function handleDrawingEnd(e) {
         if (isDrawing) {
+            e.preventDefault();
             isDrawing = false;
             
             if (tempEdge) {
@@ -126,9 +152,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 tempEdge = null;
             }
 
-            const endNodeElement = e.target.closest('.node');
-            if (endNodeElement && endNodeElement.id !== startNodeForEdge) {
-                const endNodeId = endNodeElement.id;
+            // Find the node element at the end of the interaction
+            const endNodeElement = document.elementFromPoint(e.clientX || e.changedTouches[0].clientX, e.clientY || e.changedTouches[0].clientY);
+            
+            if (endNodeElement && endNodeElement.closest('.node') && endNodeElement.closest('.node').id !== startNodeForEdge) {
+                const finalEndNodeElement = endNodeElement.closest('.node');
+                const endNodeId = finalEndNodeElement.id;
                 
                 // Check if edge already exists
                 if (!graph[startNodeForEdge].includes(endNodeId)) {
@@ -140,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     let svg = graphContainer.querySelector('svg');
                     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                     const startNodePos = { x: nodeElements[startNodeForEdge].offsetLeft + 25, y: nodeElements[startNodeForEdge].offsetTop + 25 };
-                    const endNodePos = { x: endNodeElement.offsetLeft + 25, y: endNodeElement.offsetTop + 25 };
+                    const endNodePos = { x: finalEndNodeElement.offsetLeft + 25, y: finalEndNodeElement.offsetTop + 25 };
 
                     line.setAttribute('x1', startNodePos.x);
                     line.setAttribute('y1', startNodePos.y);
@@ -154,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-    });
+    }
 
     function updateNodeSelection() {
         const nodeKeys = Object.keys(graph);
